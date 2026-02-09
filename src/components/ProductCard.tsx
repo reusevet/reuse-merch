@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Badge } from "./Badge";
 import type { Product } from "@/lib/mock-data";
-import { getB3TRPrice } from "@/lib/mock-data";
+import { getB3TRPrice, getProductTier } from "@/lib/mock-data";
 import { useCurrency } from "@/context/CurrencyContext";
 
 interface ProductCardProps {
@@ -19,6 +19,7 @@ export function ProductCard({ product, showB3TR = false }: ProductCardProps) {
   const { convertPrice, symbol } = useCurrency();
   const t = useTranslations("products");
   const displayPrice = convertPrice(product.priceEUR);
+  const tier = getProductTier(product);
 
   return (
     <Link
@@ -78,9 +79,9 @@ export function ProductCard({ product, showB3TR = false }: ProductCardProps) {
             {product.name}
           </h3>
 
-          {/* NFT included line */}
+          {/* NFT tier line */}
           <p className="text-[11px] text-text-dim font-mono mb-3">
-            {t("includesNFT")}
+            {tier.emoji} {tier.name} NFT · {tier.boost}
           </p>
 
           {/* Colors */}

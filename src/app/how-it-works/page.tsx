@@ -48,7 +48,7 @@ export default function HowItWorksPage() {
                   </span>
                 </h2>
                 <p className="text-text-muted text-[17px] leading-relaxed mb-4">
-                  100% recycled, made on-demand to avoid overproduction. Every
+                  Made with recycled &amp; certified materials, printed on-demand to avoid overproduction. Every
                   purchase includes a Supporter NFT that unlocks reward boosts
                   in the ReUse dApp.
                 </p>
@@ -59,7 +59,8 @@ export default function HowItWorksPage() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-text-muted">
                     <span className="text-accent-green">&#10003;</span>
-                    Pay with B3TR tokens (15% discount)
+                    Pay with B3TR tokens — 15% discount{" "}
+                    <span className="text-[9px] text-accent-purple/70 font-mono">(Prototype)</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-text-muted">
                     <span className="text-accent-green">&#10003;</span>
@@ -83,8 +84,8 @@ export default function HowItWorksPage() {
                 </h2>
                 <p className="text-text-muted text-[17px] leading-relaxed mb-4">
                   After checkout, your Supporter NFT is minted to your VeChain
-                  wallet. It unlocks a reward multiplier in the ReUse dApp
-                  (Bronze → Silver → Gold).
+                  wallet (Prototype — coming in v1.1). It unlocks a reward multiplier in the ReUse dApp:
+                  Bronze (+50%), Silver (+75%), or Gold (+100%) — depending on your product.
                 </p>
                 <p className="text-text-muted text-[17px] leading-relaxed mb-4">
                   If you paid with EUR, you can claim your NFT by connecting
@@ -133,7 +134,7 @@ export default function HowItWorksPage() {
           <SectionHeader
             label="Tier System"
             heading="NFT Reward Tiers"
-            description="Each tier unlocks a higher reward multiplier in the ReUse dApp. Tiers auto-upgrade as you buy more items."
+            description="Each tier unlocks a higher reward multiplier in the ReUse dApp. Your tier depends on the product you buy. (Prototype)"
           />
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-14">
@@ -149,8 +150,8 @@ export default function HowItWorksPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="B3TR Payments"
-            heading="Pay with B3TR (15% off)"
-            description="Save 15% on every order when you pay with B3TR tokens from the VeChain ecosystem."
+            heading="Pay with B3TR — 15% off (Prototype)"
+            description="Save 15% on every order when you pay with B3TR tokens from the VeChain ecosystem. Coming in v1.1."
           />
 
           <div className="mt-14 glass p-8 sm:p-10 space-y-6">
@@ -182,7 +183,7 @@ export default function HowItWorksPage() {
                     <span className="font-mono text-accent-blue shrink-0">
                       4.
                     </span>
-                    Order confirmed — NFT minted automatically
+                    Order confirmed — NFT claim available (Prototype)
                   </li>
                 </ol>
               </div>
@@ -221,6 +222,11 @@ export default function HowItWorksPage() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/shop">
               <Button size="lg">Shop Supporter Merch</Button>
+            </Link>
+            <Link href="/claim">
+              <Button variant="secondary" size="lg">
+                Claim Your NFT
+              </Button>
             </Link>
             <a
               href="https://reuse.vet/"

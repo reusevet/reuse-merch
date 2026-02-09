@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Recycle, Truck, Award, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
-import { products, getB3TRPrice } from "@/lib/mock-data";
+import { products, getB3TRPrice, getProductTier } from "@/lib/mock-data";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/components/Toast";
 
@@ -54,6 +54,7 @@ export default function ProductPage() {
   }
 
   const b3trPrice = getB3TRPrice(product.priceEUR);
+  const tier = getProductTier(product);
 
   function handleAddToCart() {
     if (product) {
@@ -124,6 +125,20 @@ export default function ProductPage() {
               {product.name}
             </h1>
 
+            {/* Quick bullets */}
+            <div className="flex flex-wrap gap-3 mb-5">
+              <span className="inline-flex items-center gap-1.5 text-xs text-text-muted bg-bg-card border border-border-subtle rounded-badge px-2.5 py-1">
+                <span className="text-accent-green">♻️</span> Recycled materials
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-xs text-text-muted bg-bg-card border border-border-subtle rounded-badge px-2.5 py-1">
+                <span>🖨️</span> Print-on-demand (less waste)
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-xs text-text-muted bg-bg-card border border-border-subtle rounded-badge px-2.5 py-1">
+                <span>🎫</span> {tier.name} NFT + {tier.boost}{" "}
+                <span className="text-[8px] text-accent-purple/70 font-mono">(Prototype)</span>
+              </span>
+            </div>
+
             {/* Price */}
             <div className="flex items-center gap-4 mb-6">
               {showB3TR ? (
@@ -156,6 +171,7 @@ export default function ProductPage() {
               aria-label="Toggle B3TR pricing"
             >
               Show {showB3TR ? "EUR" : "B3TR"} price
+              <span className="text-[8px] text-accent-purple/70 ml-1">(Prototype)</span>
             </button>
 
             {/* Description */}
@@ -279,15 +295,16 @@ export default function ProductPage() {
             {/* NFT info box */}
             <div className="mt-8 glass p-5">
               <div className="flex items-start gap-3">
-                <span className="text-2xl">🎫</span>
+                <span className="text-2xl">{tier.emoji}</span>
                 <div>
                   <h3 className="font-bold text-sm text-text-primary mb-1">
-                    Supporter NFT Included
+                    {tier.name} Supporter NFT Included{" "}
+                    <span className="text-[9px] text-accent-purple/70 font-mono font-normal">(Prototype)</span>
                   </h3>
                   <p className="text-xs text-text-muted leading-relaxed">
-                    This purchase earns you a Bronze Supporter NFT (1.2x reward
-                    multiplier in the ReUse dApp). Keep buying to level up to
-                    Silver and Gold!
+                    This purchase earns you a {tier.name} Supporter NFT ({tier.multiplier} reward
+                    multiplier / {tier.boost} in the ReUse dApp). Claim it after checkout via the{" "}
+                    <a href="/claim" className="text-accent-blue hover:underline">claim page</a>.
                   </p>
                 </div>
               </div>

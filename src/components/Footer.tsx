@@ -30,7 +30,7 @@ export function Footer() {
             <ul className="space-y-2.5">
               <li>
                 <Link
-                  href="/how-it-works"
+                  href="/shipping-returns"
                   className="text-sm text-text-muted hover:text-text-primary transition-colors"
                 >
                   Shipping &amp; Delivery
@@ -38,19 +38,19 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/how-it-works"
+                  href="/shipping-returns"
                   className="text-sm text-text-muted hover:text-text-primary transition-colors"
                 >
                   Returns &amp; Refunds
                 </Link>
               </li>
               <li>
-                <a
-                  href="mailto:support@reuse-merch.com"
+                <Link
+                  href="/contact"
                   className="text-sm text-text-muted hover:text-text-primary transition-colors"
                 >
                   Contact Us
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -63,20 +63,23 @@ export function Footer() {
             <ul className="space-y-2.5">
               <li>
                 <Link
-                  href="/how-it-works"
+                  href="/sustainability"
                   className="text-sm text-text-muted hover:text-text-primary transition-colors"
                 >
                   Materials &amp; Certifications
                 </Link>
               </li>
               <li>
-                <span className="text-sm text-text-muted">
+                <Link
+                  href="/sustainability"
+                  className="text-sm text-text-muted hover:text-text-primary transition-colors"
+                >
                   Print-on-Demand by TPOP
-                </span>
+                </Link>
               </li>
               <li>
                 <Link
-                  href="/how-it-works"
+                  href="/disclaimer"
                   className="text-sm text-text-muted hover:text-text-primary transition-colors"
                 >
                   NFT &amp; Rewards Disclaimer
@@ -92,15 +95,28 @@ export function Footer() {
             </h3>
             <ul className="space-y-2.5">
               <li>
-                <span className="text-sm text-text-muted">
-                  Terms &amp; Conditions
-                </span>
+                <Link
+                  href="/disclaimer"
+                  className="text-sm text-text-muted hover:text-text-primary transition-colors"
+                >
+                  Disclaimer
+                </Link>
               </li>
               <li>
-                <span className="text-sm text-text-muted">Privacy Policy</span>
+                <Link
+                  href="/disclaimer"
+                  className="text-sm text-text-muted hover:text-text-primary transition-colors"
+                >
+                  Privacy Policy
+                </Link>
               </li>
               <li>
-                <span className="text-sm text-text-muted">Cookie Policy</span>
+                <Link
+                  href="/disclaimer"
+                  className="text-sm text-text-muted hover:text-text-primary transition-colors"
+                >
+                  Cookie Policy
+                </Link>
               </li>
             </ul>
           </div>

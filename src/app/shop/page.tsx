@@ -78,7 +78,7 @@ export default function ShopPage() {
           <SectionHeader
             label="The Collection"
             heading="Shop All"
-            description="Supporter merch made from 100% recycled materials. Each item includes a Supporter NFT."
+            description="Supporter merch made with recycled & certified materials. Each item includes a Supporter NFT."
           />
           <p className="text-center text-sm text-text-dim mt-3 max-w-xl mx-auto">
             Merch is optional supporter gear — real rewards are earned with
@@ -204,6 +204,9 @@ export default function ShopPage() {
                     15% off
                   </span>
                 )}
+                <span className="text-[9px] text-accent-purple/70 font-mono ml-1">
+                  Prototype
+                </span>
               </div>
             </div>
           </div>
@@ -273,11 +276,11 @@ export default function ShopPage() {
                   className="overflow-hidden"
                 >
                   <p className="text-sm text-text-dim mt-3 leading-relaxed">
-                    Every product includes a Supporter NFT, minted automatically
-                    after checkout. This NFT acts as a reward multiplier in the
-                    ReUse dApp — the more you buy, the higher your tier (Bronze →
-                    Silver → Gold) and the bigger your reward boost when you shop
-                    secondhand.
+                    +NFT means you can claim a Supporter NFT after purchase (Prototype).
+                    This unlocks a rewards tier in the ReUse ecosystem: Bronze (+50%),
+                    Silver (+75%), or Gold (+100%) — depending on the product you buy.
+                    The higher your tier, the bigger your reward boost when you shop
+                    secondhand with the ReUse dApp.
                   </p>
                 </motion.div>
               )}
@@ -304,7 +307,7 @@ export default function ShopPage() {
                   Plastic-Free Packaging
                 </h3>
                 <p className="text-xs text-text-muted font-mono">
-                  Recycled materials only
+                  Recycled & certified materials
                 </p>
               </div>
               <div>
@@ -313,7 +316,7 @@ export default function ShopPage() {
                   NFT With Every Order
                 </h3>
                 <p className="text-xs text-text-muted font-mono">
-                  Minted automatically after checkout
+                  Claim after purchase (Prototype)
                 </p>
               </div>
               <div>

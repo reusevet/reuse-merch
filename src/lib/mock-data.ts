@@ -18,13 +18,46 @@ export interface Product {
   isNew?: boolean;
 }
 
+// --- Tier mapping: single source of truth (Option A) ---
+export type TierName = "Bronze" | "Silver" | "Gold";
+
+export interface TierInfo {
+  name: TierName;
+  emoji: string;
+  multiplier: string;
+  boost: string; // e.g. "+50% rewards"
+  color: string;
+}
+
+const tierMap: Record<string, TierInfo> = {
+  "circuit-hoodie": { name: "Gold", emoji: "🥇", multiplier: "2.0x", boost: "+100% rewards", color: "#FFD700" },
+  "essential-tee": { name: "Silver", emoji: "🥈", multiplier: "1.75x", boost: "+75% rewards", color: "#C0C0C0" },
+  "genesis-crewneck": { name: "Silver", emoji: "🥈", multiplier: "1.75x", boost: "+75% rewards", color: "#C0C0C0" },
+  "node-beanie": { name: "Bronze", emoji: "🥉", multiplier: "1.5x", boost: "+50% rewards", color: "#CD7F32" },
+  "loop-tote": { name: "Bronze", emoji: "🥉", multiplier: "1.5x", boost: "+50% rewards", color: "#CD7F32" },
+  "cycle-cap": { name: "Bronze", emoji: "🥉", multiplier: "1.5x", boost: "+50% rewards", color: "#CD7F32" },
+};
+
+const defaultTier: TierInfo = { name: "Bronze", emoji: "🥉", multiplier: "1.5x", boost: "+50% rewards", color: "#CD7F32" };
+
+export function getProductTier(product: Product): TierInfo {
+  return tierMap[product.handle] ?? defaultTier;
+}
+
+// Claim flow helper: map item label → tier
+export const claimItemOptions = [
+  { label: "Hoodie", tier: tierMap["circuit-hoodie"] },
+  { label: "T-Shirt / Crewneck", tier: tierMap["essential-tee"] },
+  { label: "Beanie / Tote / Cap", tier: tierMap["node-beanie"] },
+] as const;
+
 export const products: Product[] = [
   {
     id: "1",
     handle: "essential-tee",
     name: "Essential Tee",
     description:
-      "The foundation of sustainable style. Made from 100% recycled cotton, this tee is soft, breathable, and planet-friendly.",
+      "The foundation of sustainable style. Soft, breathable, and planet-friendly — made with recycled & certified materials.",
     material: "100% Recycled Cotton",
     priceEUR: 34.95,
     category: "apparel",
@@ -60,7 +93,7 @@ export const products: Product[] = [
     handle: "loop-tote",
     name: "Loop Tote",
     description:
-      "Carry your commitment to sustainability. Made from 100% recycled organic cotton, the Loop Tote is perfect for everyday use.",
+      "Carry your commitment to sustainability. Made with recycled & certified organic cotton, the Loop Tote is perfect for everyday use.",
     material: "100% Recycled Organic Cotton",
     priceEUR: 22.95,
     category: "accessories",
@@ -93,7 +126,7 @@ export const products: Product[] = [
     handle: "cycle-cap",
     name: "Cycle Cap",
     description:
-      "Sun, rain, or ride — the Cycle Cap has you covered. Made from 100% recycled polyester, it's as versatile as it is sustainable.",
+      "Sun, rain, or ride — the Cycle Cap has you covered. Made with recycled & certified polyester, as versatile as it is sustainable.",
     material: "100% Recycled Polyester",
     priceEUR: 26.95,
     category: "accessories",
@@ -109,7 +142,7 @@ export const products: Product[] = [
     handle: "genesis-crewneck",
     name: "Genesis Crewneck",
     description:
-      "The Genesis Crewneck is your go-to for sustainable comfort. 100% recycled French terry that feels as good as it looks.",
+      "The Genesis Crewneck is your go-to for sustainable comfort. Recycled & certified French terry that feels as good as it looks.",
     material: "100% Recycled French Terry",
     priceEUR: 54.95,
     category: "apparel",
@@ -127,11 +160,11 @@ export const nftTiers = [
   {
     name: "Bronze",
     emoji: "🥉",
-    multiplier: "1.2x",
-    requirement: "1 item purchased",
+    multiplier: "1.5x",
+    requirement: "Beanie, Tote, or Cap purchase",
     color: "#CD7F32",
     benefits: [
-      "20% reward boost in ReUse dApp",
+      "+50% reward boost in ReUse dApp",
       "Supporter badge on ReUse profile",
       "Early access to merch drops",
     ],
@@ -139,11 +172,11 @@ export const nftTiers = [
   {
     name: "Silver",
     emoji: "🥈",
-    multiplier: "1.5x",
-    requirement: "3 items purchased",
+    multiplier: "1.75x",
+    requirement: "T-Shirt or Crewneck purchase",
     color: "#C0C0C0",
     benefits: [
-      "50% reward boost in ReUse dApp",
+      "+75% reward boost in ReUse dApp",
       "Exclusive Silver badge",
       "Priority support",
       "Members-only drops + early access",
@@ -153,10 +186,10 @@ export const nftTiers = [
     name: "Gold",
     emoji: "🥇",
     multiplier: "2.0x",
-    requirement: "5 items purchased",
+    requirement: "Hoodie purchase",
     color: "#FFD700",
     benefits: [
-      "100% reward boost in ReUse dApp",
+      "+100% reward boost in ReUse dApp",
       "Legendary Gold badge",
       "VIP Discord role + early access",
       "Free shipping on merch drops",

@@ -24,7 +24,7 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <RevealOnScroll>
               <Badge variant="green" className="mb-6">
-                100% Recycled Materials
+                Recycled &amp; Certified Materials
               </Badge>
               <h1 className="font-serif italic text-[clamp(44px,7vw,84px)] leading-[1.05] text-text-primary mb-6">
                 Wear the <span className="gradient-text">Change</span>
@@ -64,7 +64,7 @@ export default function HomePage() {
               {/* Trust row */}
               <div className="flex flex-wrap gap-4 mt-8">
                 {[
-                  { icon: "♻️", text: "100% recycled certified blanks" },
+                  { icon: "♻️", text: "Recycled & certified blanks" },
                   { icon: "🖨️", text: "Printed on demand (less waste)" },
                   { icon: "📦", text: "EU shipping + returns policy" },
                 ].map((item) => (
@@ -121,7 +121,7 @@ export default function HomePage() {
                 icon: "🛍️",
                 title: "Buy Supporter Merch",
                 description:
-                  "Optional supporter gear made from recycled materials, printed on demand. Pay with EUR or B3TR tokens (15% discount).",
+                  "Optional supporter gear made with recycled & certified materials, printed on demand. Pay with EUR or B3TR tokens — 15% discount (Prototype).",
               },
               {
                 step: "02",
@@ -164,7 +164,7 @@ export default function HomePage() {
             <SectionHeader
               label="The Collection"
               heading="Founding Edition"
-              description="100% recycled materials. Ethically produced. Each item includes a Supporter NFT + reward boost."
+              description="Made with recycled & certified materials. Ethically produced. Each item includes a Supporter NFT + reward boost."
             />
           </RevealOnScroll>
 
@@ -195,7 +195,7 @@ export default function HomePage() {
             <SectionHeader
               label="Supporter NFTs"
               heading="Level Up Your Rewards"
-              description="Every purchase earns you a Supporter NFT. The more items you buy, the higher your tier and reward multiplier in the ReUse dApp."
+              description="Every purchase earns you a Supporter NFT. Your tier depends on the product you buy — boosting your reward multiplier in the ReUse dApp. (Prototype)"
             />
           </RevealOnScroll>
 
@@ -233,6 +233,8 @@ export default function HomePage() {
           </StaggerContainer>
           <p className="text-center mt-6 text-[11px] font-mono text-text-dim">
             Community totals (pilot metrics) &middot;{" "}
+            <span className="text-accent-purple">Demo data</span>
+            {" "}&middot;{" "}
             <Link
               href="/how-it-works"
               className="text-accent-blue hover:underline"
@@ -240,6 +242,33 @@ export default function HomePage() {
               How we calculate
             </Link>
           </p>
+        </div>
+      </section>
+
+      {/* Wear the Movement — quick conversion */}
+      <section className="py-16 sm:py-20 bg-bg-primary">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <RevealOnScroll>
+            <h2 className="font-serif italic text-3xl sm:text-4xl text-text-primary mb-3">
+              Wear the Movement
+            </h2>
+            <p className="text-text-muted text-lg max-w-xl mx-auto mb-2">
+              Every piece supports the circular economy — and unlocks boosted secondhand rewards.
+            </p>
+            <p className="text-text-dim text-sm mb-8">
+              Merch is optional. The real impact is in reuse.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link href="/shop">
+                <Button size="lg">Shop Merch</Button>
+              </Link>
+              <Link href="/how-it-works">
+                <Button variant="secondary" size="lg">
+                  How It Works
+                </Button>
+              </Link>
+            </div>
+          </RevealOnScroll>
         </div>
       </section>
 

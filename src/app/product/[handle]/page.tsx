@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowLeft, Recycle, Truck, Award, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Recycle, Truck, Award, Plus, Minus, Loader2 } from "lucide-react";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
-import { products, getB3TRPrice, getProductTier } from "@/lib/mock-data";
+import { getProductByHandle } from "@/lib/shopify";
+import type { ShopifyProduct, ShopifyProductVariant } from "@/lib/shopify";
+import { getProductMeta, getB3TRPrice } from "@/lib/product-meta";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/components/Toast";
 
@@ -17,18 +19,59 @@ const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
 export default function ProductPage() {
   const params = useParams();
   const handle = params.handle as string;
-  const product = products.find((p) => p.handle === handle);
   const { addItem } = useCart();
   const { addToast } = useToast();
 
-  const [selectedColor, setSelectedColor] = useState(
-    product?.colors[0]?.name ?? ""
-  );
-  const [selectedSize, setSelectedSize] = useState(
-    product?.sizes[0] ?? ""
-  );
+  const [product, setProduct] = useState<ShopifyProduct | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
   const [showB3TR, setShowB3TR] = useState(false);
   const [quantity, setQuantity] = useState(1);
+
+  // Selected options keyed by option name
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        const p = await getProductByHandle(handle);
+        setProduct(p);
+        // Initialize selected options to first values
+        if (p) {
+          const defaults: Record<string, string> = {};
+          p.options.forEach((opt) => {
+            defaults[opt.name] = opt.values[0];
+          });
+          setSelectedOptions(defaults);
+        }
+      } catch (err) {
+        console.error("Failed to fetch product:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProduct();
+  }, [handle]);
+
+  // Find the matching variant based on selected options
+  const selectedVariant: ShopifyProductVariant | undefined = useMemo(() => {
+    if (!product) return undefined;
+    return product.variants.edges
+      .map((e) => e.node)
+      .find((v) =>
+        v.selectedOptions.every(
+          (opt) => selectedOptions[opt.name] === opt.value
+        )
+      );
+  }, [product, selectedOptions]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-accent-blue" />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -42,10 +85,7 @@ export default function ProductPage() {
           <h1 className="text-2xl font-serif italic text-text-primary mb-2">
             Product not found
           </h1>
-          <Link
-            href="/shop"
-            className="text-accent-blue hover:underline text-sm"
-          >
+          <Link href="/shop" className="text-accent-blue hover:underline text-sm">
             Back to shop
           </Link>
         </motion.div>
@@ -53,15 +93,21 @@ export default function ProductPage() {
     );
   }
 
-  const b3trPrice = getB3TRPrice(product.priceEUR);
-  const tier = getProductTier(product);
+  const meta = getProductMeta(handle);
+  const tier = meta.tier;
+  const price = selectedVariant
+    ? parseFloat(selectedVariant.price.amount)
+    : parseFloat(product.priceRange.minVariantPrice.amount);
+  const b3trPrice = getB3TRPrice(price);
+  const mainImg = product.images.edges[0]?.node;
 
-  function handleAddToCart() {
-    if (product) {
-      addItem(product, selectedSize, selectedColor, quantity);
-      addToast(`${product.name} added to cart`);
-      setQuantity(1);
-    }
+  async function handleAddToCart() {
+    if (!selectedVariant) return;
+    setAdding(true);
+    await addItem(selectedVariant.id, quantity);
+    addToast(`${product!.title} added to cart`);
+    setQuantity(1);
+    setAdding(false);
   }
 
   return (
@@ -89,21 +135,20 @@ export default function ProductPage() {
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.5, ease }}
             >
-              <Image
-                src={product.image}
-                alt={product.name}
-                width={500}
-                height={500}
-                className="object-contain w-full h-full drop-shadow-xl"
-                priority
-              />
+              {mainImg ? (
+                <Image
+                  src={mainImg.url}
+                  alt={mainImg.altText || product.title}
+                  width={500}
+                  height={500}
+                  className="object-contain w-full h-full drop-shadow-xl"
+                  priority
+                />
+              ) : (
+                <span className="text-8xl opacity-20">👕</span>
+              )}
             </motion.div>
 
-            {product.badge && (
-              <div className="absolute top-4 left-4">
-                <Badge>{product.badge}</Badge>
-              </div>
-            )}
             <div className="absolute top-4 right-4">
               <Badge variant="blue">+NFT</Badge>
             </div>
@@ -115,14 +160,14 @@ export default function ProductPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease, delay: 0.15 }}
           >
-            {/* Material */}
+            {/* Materials */}
             <span className="font-mono text-[11px] uppercase tracking-[2px] text-accent-green">
-              {product.material}
+              {meta.materials}
             </span>
 
             {/* Name */}
             <h1 className="font-serif italic text-[clamp(30px,4.5vw,48px)] text-text-primary mt-2 mb-4">
-              {product.name}
+              {product.title}
             </h1>
 
             {/* Quick bullets */}
@@ -147,13 +192,13 @@ export default function ProductPage() {
                     {b3trPrice} B3TR
                   </span>
                   <span className="font-mono text-lg text-text-dim line-through">
-                    &euro;{product.priceEUR.toFixed(2)}
+                    &euro;{price.toFixed(2)}
                   </span>
                   <Badge variant="green">-15%</Badge>
                 </>
               ) : (
                 <span className="font-mono text-3xl font-bold text-text-primary">
-                  &euro;{product.priceEUR.toFixed(2)}
+                  &euro;{price.toFixed(2)}
                 </span>
               )}
             </div>
@@ -179,55 +224,38 @@ export default function ProductPage() {
               {product.description}
             </p>
 
-            {/* Color selector */}
-            <div className="mb-6">
-              <span className="font-mono text-[11px] uppercase tracking-[1px] text-text-dim block mb-3">
-                Color — {selectedColor}
-              </span>
-              <div className="flex gap-2" role="radiogroup" aria-label="Color">
-                {product.colors.map((color) => (
-                  <motion.button
-                    key={color.name}
-                    onClick={() => setSelectedColor(color.name)}
-                    whileTap={{ scale: 0.9 }}
-                    className={`w-10 h-10 rounded-full border-2 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary ${
-                      selectedColor === color.name
-                        ? "border-accent-blue scale-110"
-                        : "border-border-subtle hover:border-accent-blue/40"
-                    }`}
-                    style={{ backgroundColor: color.hex }}
-                    role="radio"
-                    aria-checked={selectedColor === color.name}
-                    aria-label={color.name}
-                  />
-                ))}
+            {/* Option selectors (Color, Size, etc.) */}
+            {product.options.map((option) => (
+              <div key={option.name} className="mb-6">
+                <span className="font-mono text-[11px] uppercase tracking-[1px] text-text-dim block mb-3">
+                  {option.name}
+                  {selectedOptions[option.name] && ` — ${selectedOptions[option.name]}`}
+                </span>
+                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={option.name}>
+                  {option.values.map((value) => (
+                    <motion.button
+                      key={value}
+                      onClick={() =>
+                        setSelectedOptions((prev) => ({
+                          ...prev,
+                          [option.name]: value,
+                        }))
+                      }
+                      whileTap={{ scale: 0.95 }}
+                      className={`px-4 py-2.5 rounded-button font-mono text-sm transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue ${
+                        selectedOptions[option.name] === value
+                          ? "bg-gradient-button text-white shadow-button"
+                          : "bg-bg-card border border-border-subtle text-text-muted hover:text-text-primary hover:border-accent-blue/20"
+                      }`}
+                      role="radio"
+                      aria-checked={selectedOptions[option.name] === value}
+                    >
+                      {value}
+                    </motion.button>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            {/* Size selector */}
-            <div className="mb-6">
-              <span className="font-mono text-[11px] uppercase tracking-[1px] text-text-dim block mb-3">
-                Size
-              </span>
-              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Size">
-                {product.sizes.map((size) => (
-                  <motion.button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    whileTap={{ scale: 0.95 }}
-                    className={`px-4 py-2.5 rounded-button font-mono text-sm transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue ${
-                      selectedSize === size
-                        ? "bg-gradient-button text-white shadow-button"
-                        : "bg-bg-card border border-border-subtle text-text-muted hover:text-text-primary hover:border-accent-blue/20"
-                    }`}
-                    role="radio"
-                    aria-checked={selectedSize === size}
-                  >
-                    {size}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
+            ))}
 
             {/* Quantity selector */}
             <div className="mb-8">
@@ -261,8 +289,17 @@ export default function ProductPage() {
 
             {/* Add to cart */}
             <motion.div whileTap={{ scale: 0.98 }}>
-              <Button size="lg" className="w-full sm:w-auto" onClick={handleAddToCart}>
-                Add to Cart{quantity > 1 ? ` (${quantity})` : ""}
+              <Button
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={handleAddToCart}
+                disabled={!selectedVariant?.availableForSale || adding}
+              >
+                {adding
+                  ? "Adding..."
+                  : !selectedVariant?.availableForSale
+                  ? "Sold Out"
+                  : `Add to Cart${quantity > 1 ? ` (${quantity})` : ""}`}
               </Button>
             </motion.div>
 
@@ -271,11 +308,11 @@ export default function ProductPage() {
               {[
                 {
                   icon: <Recycle size={18} className="text-accent-green" />,
-                  text: product.material,
+                  text: meta.materials,
                 },
                 {
                   icon: <Award size={18} className="text-accent-purple" />,
-                  text: "Supporter NFT included with purchase",
+                  text: `${tier.name} Supporter NFT included (${tier.boost})`,
                 },
                 {
                   icon: <Truck size={18} className="text-accent-blue" />,
@@ -299,12 +336,14 @@ export default function ProductPage() {
                 <div>
                   <h3 className="font-bold text-sm text-text-primary mb-1">
                     {tier.name} Supporter NFT Included{" "}
-                    <span className="text-[9px] text-accent-purple/70 font-mono font-normal">(Prototype)</span>
+                    <span className="text-[9px] text-accent-purple/70 font-mono font-normal">
+                      (Prototype)
+                    </span>
                   </h3>
                   <p className="text-xs text-text-muted leading-relaxed">
-                    This purchase earns you a {tier.name} Supporter NFT ({tier.multiplier} reward
-                    multiplier / {tier.boost} in the ReUse dApp). Claim it after checkout via the{" "}
-                    <a href="/claim" className="text-accent-blue hover:underline">claim page</a>.
+                    This purchase earns you a {tier.name} Supporter NFT (
+                    {tier.multiplier} reward multiplier / {tier.boost} in the
+                    ReUse dApp). Buyback contribution: {meta.buyback} per sale.
                   </p>
                 </div>
               </div>

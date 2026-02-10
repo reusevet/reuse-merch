@@ -1,36 +1,138 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ReUse Merch Shop
+
+Sustainable supporter merch for the [ReUse](https://reuse.vet/) circular economy ecosystem. Built with Next.js 14, Shopify Storefront API, and Printful print-on-demand.
+
+## Tech Stack
+
+- **Framework:** Next.js 14 (App Router) + TypeScript
+- **Styling:** Tailwind CSS (dark theme)
+- **Commerce:** Shopify Storefront API (GraphQL)
+- **Fulfillment:** Printful (via Shopify integration)
+- **Animations:** Framer Motion
+- **i18n:** next-intl (EN, NL, DE, FR, ES)
+- **Deployment:** Vercel
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Set up environment variables
+
+Copy `.env.example` to `.env.local` and fill in your Shopify credentials:
+
+```bash
+cp .env.example .env.local
+```
+
+Required variables:
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` | Your Shopify store domain (e.g. `your-store.myshopify.com`) |
+| `NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN` | Storefront API access token |
+
+#### How to get your Storefront access token
+
+1. Go to **Shopify Admin** > **Settings** > **Apps and sales channels** > **Develop apps**
+2. Create a new app (or use an existing one)
+3. Under **Configuration**, enable **Storefront API** access scopes:
+   - `unauthenticated_read_products`
+   - `unauthenticated_read_product_listings`
+   - `unauthenticated_write_checkouts`
+   - `unauthenticated_read_checkouts`
+4. Install the app and copy the **Storefront API access token**
+
+### 3. Run development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Build for production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+```
 
-## Learn More
+## Shopify + Printful Setup
 
-To learn more about Next.js, take a look at the following resources:
+This shop is designed to work with **Printful** as the fulfillment partner, connected to Shopify:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Printful** > Create products (Beanie, T-Shirt, Hoodie, Sweatshirt)
+2. **Printful** > Publish products to your Shopify store
+3. **Shopify** > Products will appear with auto-generated URL handles
+4. **This app** > Update handles in `src/lib/product-meta.ts` to match
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Product Handle Mapping
 
-## Deploy on Vercel
+The file `src/lib/product-meta.ts` maps Shopify product handles to NFT tier metadata. After publishing products from Printful, check your Shopify Admin > Products > [product] > URL handle and update the handles in `metaMap`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Current expected handles:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Product | Handle | NFT Tier |
+|---|---|---|
+| Beanie | `ribbed-knit-beanie` | Bronze (+50%) |
+| T-Shirt | `unisex-staple-eco-t-shirt` | Silver (+75%) |
+| Hoodie | `unisex-organic-relaxed-hoodie` | Gold (+100%) |
+| Sweatshirt | `unisex-eco-sweatshirt` | Silver (+75%) |
+
+## Project Structure
+
+```
+src/
+  app/            # Next.js App Router pages
+    page.tsx      # Homepage
+    shop/         # Shop page (product grid)
+    product/      # Product detail pages (dynamic [handle])
+    claim/        # NFT claim prototype
+    how-it-works/ # How it works page
+    contact/      # Contact page
+    ...
+  components/     # Shared UI components
+  context/        # React contexts (Cart)
+  lib/
+    shopify/      # Shopify Storefront API client
+      client.ts   # GraphQL fetch function
+      queries.ts  # GraphQL queries & mutations
+      types.ts    # TypeScript interfaces
+      index.ts    # High-level API functions
+    product-meta.ts # Tier/buyback mapping by handle
+  i18n/           # Internationalization config
+```
+
+## Order Flow
+
+```
+Customer browses shop → Adds to Shopify cart → Redirected to Shopify checkout
+→ Payment processed by Shopify → Order created → Printful auto-fulfills
+→ Customer receives product + can claim Supporter NFT (prototype)
+```
+
+## Commands
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build |
+| `npm run lint` | Run ESLint |
+| `npm start` | Start production server |
+
+## Deployment
+
+Deployed on Vercel. Set the same environment variables in your Vercel project settings:
+
+- `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN`
+- `NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN`
+
+## Notes
+
+- **NFT/Blockchain features** are labeled as "Prototype" — no real minting occurs yet
+- **B3TR pricing** is a prototype toggle (15% discount display only)
+- **Printful** handles all print-on-demand fulfillment automatically via Shopify
+- Only products whose handles are listed in `ALLOWED_HANDLES` (in `product-meta.ts`) will appear in the shop

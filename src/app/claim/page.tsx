@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Wallet, CheckCircle, ChevronDown } from "lucide-react";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
-import { claimItemOptions } from "@/lib/mock-data";
+import { claimItemOptions } from "@/lib/product-meta";
 
 const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
 

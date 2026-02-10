@@ -3,7 +3,7 @@ import { Button } from "@/components/Button";
 import { SectionHeader } from "@/components/SectionHeader";
 import { NFTTierCard } from "@/components/NFTTierCard";
 import { Badge } from "@/components/Badge";
-import { nftTiers } from "@/lib/mock-data";
+import { nftTiers } from "@/lib/product-meta";
 
 export default function HowItWorksPage() {
   return (

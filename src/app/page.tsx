@@ -1,5 +1,9 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/Button";
 import { SectionHeader } from "@/components/SectionHeader";
 import { ProductCard } from "@/components/ProductCard";
@@ -11,10 +15,28 @@ import {
   StaggerItem,
   CountUp,
 } from "@/components/Motion";
-import { products, nftTiers, stats } from "@/lib/mock-data";
+import { nftTiers, stats, ALLOWED_HANDLES } from "@/lib/product-meta";
+import { getAllProducts } from "@/lib/shopify";
+import type { ShopifyProduct } from "@/lib/shopify";
 
 export default function HomePage() {
-  const featuredProducts = products.slice(0, 3);
+  const [featuredProducts, setFeaturedProducts] = useState<ShopifyProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const all = await getAllProducts();
+        const filtered = all.filter((p) => ALLOWED_HANDLES.includes(p.handle));
+        setFeaturedProducts(filtered.slice(0, 3));
+      } catch (err) {
+        console.error("Failed to fetch featured products:", err);
+      } finally {
+        setLoadingProducts(false);
+      }
+    }
+    fetchProducts();
+  }, []);
 
   return (
     <div className="overflow-hidden">
@@ -168,13 +190,25 @@ export default function HomePage() {
             />
           </RevealOnScroll>
 
-          <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-14">
-            {featuredProducts.map((product) => (
-              <StaggerItem key={product.id}>
-                <ProductCard product={product} />
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+          {loadingProducts ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 size={32} className="animate-spin text-accent-blue" />
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-14">
+              {featuredProducts.map((product) => (
+                <StaggerItem key={product.id}>
+                  <ProductCard product={product} />
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-text-muted">
+                Products loading soon. Check back shortly!
+              </p>
+            </div>
+          )}
 
           <RevealOnScroll delay={0.4}>
             <div className="text-center mt-12">

@@ -3,209 +3,171 @@
 import React, {
   createContext,
   useContext,
-  useReducer,
+  useState,
   useCallback,
   useEffect,
   useMemo,
 } from "react";
-import type { Product } from "@/lib/mock-data";
+import type { ShopifyCart, ShopifyCartLine } from "@/lib/shopify";
+import {
+  createCart,
+  addLinesToCart,
+  updateCartLines,
+  removeCartLines,
+  getCart,
+} from "@/lib/shopify";
 
-export interface CartItem {
-  product: Product;
-  size: string;
-  color: string;
-  quantity: number;
-}
-
-interface CartState {
-  items: CartItem[];
-  isOpen: boolean;
-  hydrated: boolean;
-}
-
-type CartAction =
-  | { type: "ADD_ITEM"; payload: CartItem }
-  | { type: "REMOVE_ITEM"; payload: { productId: string; size: string; color: string } }
-  | { type: "UPDATE_QUANTITY"; payload: { productId: string; size: string; color: string; quantity: number } }
-  | { type: "TOGGLE_CART" }
-  | { type: "CLOSE_CART" }
-  | { type: "CLEAR_CART" }
-  | { type: "HYDRATE"; payload: CartItem[] };
+// Re-export the cart line type for convenience
+export type CartLine = ShopifyCartLine;
 
 interface CartContextType {
-  items: CartItem[];
+  cart: ShopifyCart | null;
+  lines: ShopifyCartLine[];
   isOpen: boolean;
-  addItem: (product: Product, size: string, color: string, quantity?: number) => void;
-  removeItem: (productId: string, size: string, color: string) => void;
-  updateQuantity: (productId: string, size: string, color: string, quantity: number) => void;
+  loading: boolean;
+  addItem: (variantId: string, quantity?: number) => Promise<void>;
+  removeItem: (lineId: string) => Promise<void>;
+  updateQuantity: (lineId: string, quantity: number) => Promise<void>;
   toggleCart: () => void;
   closeCart: () => void;
-  clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  checkoutUrl: string | null;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const STORAGE_KEY = "reuse-cart";
-
-function cartReducer(state: CartState, action: CartAction): CartState {
-  switch (action.type) {
-    case "HYDRATE":
-      return { ...state, items: action.payload, hydrated: true };
-
-    case "ADD_ITEM": {
-      const existingIndex = state.items.findIndex(
-        (item) =>
-          item.product.id === action.payload.product.id &&
-          item.size === action.payload.size &&
-          item.color === action.payload.color
-      );
-
-      if (existingIndex >= 0) {
-        const newItems = [...state.items];
-        newItems[existingIndex] = {
-          ...newItems[existingIndex],
-          quantity: newItems[existingIndex].quantity + action.payload.quantity,
-        };
-        return { ...state, items: newItems, isOpen: true };
-      }
-
-      return { ...state, items: [...state.items, action.payload], isOpen: true };
-    }
-
-    case "REMOVE_ITEM":
-      return {
-        ...state,
-        items: state.items.filter(
-          (item) =>
-            !(
-              item.product.id === action.payload.productId &&
-              item.size === action.payload.size &&
-              item.color === action.payload.color
-            )
-        ),
-      };
-
-    case "UPDATE_QUANTITY": {
-      if (action.payload.quantity <= 0) {
-        return {
-          ...state,
-          items: state.items.filter(
-            (item) =>
-              !(
-                item.product.id === action.payload.productId &&
-                item.size === action.payload.size &&
-                item.color === action.payload.color
-              )
-          ),
-        };
-      }
-
-      return {
-        ...state,
-        items: state.items.map((item) =>
-          item.product.id === action.payload.productId &&
-          item.size === action.payload.size &&
-          item.color === action.payload.color
-            ? { ...item, quantity: action.payload.quantity }
-            : item
-        ),
-      };
-    }
-
-    case "TOGGLE_CART":
-      return { ...state, isOpen: !state.isOpen };
-
-    case "CLOSE_CART":
-      return { ...state, isOpen: false };
-
-    case "CLEAR_CART":
-      return { ...state, items: [] };
-
-    default:
-      return state;
-  }
-}
+const CART_ID_KEY = "reuse-cart-id";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, {
-    items: [],
-    isOpen: false,
-    hydrated: false,
-  });
+  const [cart, setCart] = useState<ShopifyCart | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Hydrate from localStorage on mount
+  // Hydrate cart from localStorage on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const items = JSON.parse(stored) as CartItem[];
-        dispatch({ type: "HYDRATE", payload: items });
-      } else {
-        dispatch({ type: "HYDRATE", payload: [] });
+    async function hydrate() {
+      try {
+        const cartId = localStorage.getItem(CART_ID_KEY);
+        if (cartId) {
+          const existing = await getCart(cartId);
+          if (existing && existing.lines.edges.length > 0) {
+            setCart(existing);
+            return;
+          }
+        }
+      } catch {
+        // Cart expired or invalid — will create new on first add
+        localStorage.removeItem(CART_ID_KEY);
       }
-    } catch {
-      dispatch({ type: "HYDRATE", payload: [] });
     }
+    hydrate();
   }, []);
 
-  // Persist to localStorage on changes
+  // Persist cartId whenever cart changes
   useEffect(() => {
-    if (state.hydrated) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
-      } catch {
-        // Storage full or unavailable
-      }
+    if (cart?.id) {
+      localStorage.setItem(CART_ID_KEY, cart.id);
     }
-  }, [state.items, state.hydrated]);
+  }, [cart?.id]);
+
+  const lines = useMemo(
+    () => cart?.lines.edges.map((e) => e.node) ?? [],
+    [cart]
+  );
+
+  const totalItems = cart?.totalQuantity ?? 0;
+
+  const totalPrice = useMemo(() => {
+    if (!cart) return 0;
+    return parseFloat(cart.cost.subtotalAmount.amount);
+  }, [cart]);
+
+  const checkoutUrl = cart?.checkoutUrl ?? null;
 
   const addItem = useCallback(
-    (product: Product, size: string, color: string, quantity: number = 1) => {
-      dispatch({ type: "ADD_ITEM", payload: { product, size, color, quantity } });
+    async (variantId: string, quantity: number = 1) => {
+      setLoading(true);
+      try {
+        if (!cart) {
+          // Create new cart with the item
+          const newCart = await createCart([
+            { merchandiseId: variantId, quantity },
+          ]);
+          setCart(newCart);
+        } else {
+          const updated = await addLinesToCart(cart.id, [
+            { merchandiseId: variantId, quantity },
+          ]);
+          setCart(updated);
+        }
+        setIsOpen(true);
+      } catch (err) {
+        console.error("Failed to add item to cart:", err);
+      } finally {
+        setLoading(false);
+      }
     },
-    []
+    [cart]
   );
 
-  const removeItem = useCallback((productId: string, size: string, color: string) => {
-    dispatch({ type: "REMOVE_ITEM", payload: { productId, size, color } });
-  }, []);
+  const removeItem = useCallback(
+    async (lineId: string) => {
+      if (!cart) return;
+      setLoading(true);
+      try {
+        const updated = await removeCartLines(cart.id, [lineId]);
+        setCart(updated);
+      } catch (err) {
+        console.error("Failed to remove item:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [cart]
+  );
 
   const updateQuantity = useCallback(
-    (productId: string, size: string, color: string, quantity: number) => {
-      dispatch({ type: "UPDATE_QUANTITY", payload: { productId, size, color, quantity } });
+    async (lineId: string, quantity: number) => {
+      if (!cart) return;
+      setLoading(true);
+      try {
+        if (quantity <= 0) {
+          const updated = await removeCartLines(cart.id, [lineId]);
+          setCart(updated);
+        } else {
+          const updated = await updateCartLines(cart.id, [
+            { id: lineId, quantity },
+          ]);
+          setCart(updated);
+        }
+      } catch (err) {
+        console.error("Failed to update quantity:", err);
+      } finally {
+        setLoading(false);
+      }
     },
-    []
+    [cart]
   );
 
-  const toggleCart = useCallback(() => dispatch({ type: "TOGGLE_CART" }), []);
-  const closeCart = useCallback(() => dispatch({ type: "CLOSE_CART" }), []);
-  const clearCart = useCallback(() => dispatch({ type: "CLEAR_CART" }), []);
-
-  const totalItems = useMemo(
-    () => state.items.reduce((sum, item) => sum + item.quantity, 0),
-    [state.items]
-  );
-
-  const totalPrice = useMemo(
-    () => state.items.reduce((sum, item) => sum + item.product.priceEUR * item.quantity, 0),
-    [state.items]
-  );
+  const toggleCart = useCallback(() => setIsOpen((v) => !v), []);
+  const closeCart = useCallback(() => setIsOpen(false), []);
 
   return (
     <CartContext.Provider
       value={{
-        items: state.items,
-        isOpen: state.isOpen,
+        cart,
+        lines,
+        isOpen,
+        loading,
         addItem,
         removeItem,
         updateQuantity,
         toggleCart,
         closeCart,
-        clearCart,
         totalItems,
         totalPrice,
+        checkoutUrl,
       }}
     >
       {children}

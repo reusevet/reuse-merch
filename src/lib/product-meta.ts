@@ -48,29 +48,17 @@ const GOLD: TierInfo = {
 // IMPORTANT: Update these handles to match your Shopify product URL handles
 // (set by Printful when published). You can find them in Shopify Admin > Products.
 const metaMap: Record<string, ProductMeta> = {
-  // Beanie (Bronze) — Ribbed Knit Beanie | Atlantis
-  "ribbed-knit-beanie": {
+  // Beanie (Bronze) — Organic Ribbed Beanie
+  "organic-ribbed-beanie": {
     tier: BRONZE,
     buyback: "€1–€2",
-    materials: "50% recycled polyester / 50% acrylic",
+    materials: "100% organic cotton",
   },
-  // T-Shirt (Silver) — Bella+Canvas 3001ECO
-  "unisex-staple-eco-t-shirt": {
-    tier: SILVER,
-    buyback: "€3",
-    materials: "65% recycled polyester / 35% recycled cotton",
-  },
-  // Hoodie (Gold) — Stanley/Stella SASU024
-  "unisex-organic-relaxed-hoodie": {
+  // Hoodie (Gold) — Unisex Organic Side Pocket Hoodie
+  "unisex-organic-side-pocket-hoodie": {
     tier: GOLD,
     buyback: "€7",
-    materials: "Organic cotton (Stanley/Stella SASU024)",
-  },
-  // Sweatshirt / Crewneck (Silver) — Stanley/Stella STSU178
-  "unisex-eco-sweatshirt": {
-    tier: SILVER,
-    buyback: "€5",
-    materials: "Organic & recycled blend (Stanley/Stella STSU178)",
+    materials: "Organic cotton",
   },
 };
 
